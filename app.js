@@ -1,6 +1,10 @@
 //para acceso a las variables de entorno
 require('dotenv').config();
 const express = require('express');
+
+const LoggerMiddleware = require('./middlewares/logger')
+const { validateUser } = require('./utils/validation')
+
 const bodyParser = require('body-parser');
 
 //uso de fileSystem 
@@ -14,6 +18,7 @@ const app = express();
 //declaración de middleware para body-parser
 app.use(bodyParser.json()); //soporte para json
 app.use(bodyParser.urlencoded({ extended: true })); //soporte para formData (datos de formulario)
+app.use(LoggerMiddleware)
 
 //lectura de puerto desde variables de entorno
 const PORT = process.env.PORT || 3005;
@@ -91,40 +96,73 @@ app.get('/users', (req, res) => {
 
 //implementación de método POST de usuarios
 app.post('/users', (req, res) => {
-    const newUser = req.body;
-    fs.readFile(usersFilePath, 'utf-8', (err, data) => {
-        if(err){
-            return res.status(500).json({ error : 'Error con conexión de datos'});
-        }
-        const users = JSON.parse(data)
-        users.push(newUser);
-        fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), (err) => {
-            if (err) {
-                return res.status(500).json({error : 'Error al guardar el usuario'})
-            }
-            res.status(201).json(newUser);
-        });
+  const newUser = req.body;
+  fs.readFile(usersFilePath, 'utf-8', (err, data) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error con conexión de datos.' });
+    }
+    const users = JSON.parse(data);
+
+    const validation = validateUser(newUser, users);
+    if (!validation.isValid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    users.push(newUser);
+    fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), err => {
+      if (err) {
+        return res.status(500).json({ error: 'Error al guardar el usuario.' });
+      }
+      res.status(201).json(newUser);
     });
+  });
 });
 
 //implementación de método PUT de usuarios
 app.put('/users/:id', (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  const updatedUser = req.body;
+
+  fs.readFile(usersFilePath, 'utf8', (err, data) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error con conexión de datos.' });
+    }
+    let users = JSON.parse(data);
+
+    const validation = validateUser(updatedUser, users);
+    if (!validation.isValid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    users = users.map(user =>
+      user.id === userId ? { ...user, ...updatedUser } : user
+    );
+    fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), err => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ error: 'Error al actualizar el usuario' });
+      }
+      res.json(updatedUser);
+    });
+  });
+});
+
+
+//implementación de método DELETE de usuarios
+app.delete('/users/:id', (req, res) => {
     const userId = parseInt(req.params.id, 10);
-    const updateUser = req.body;
     fs.readFile(usersFilePath, 'utf-8', (err, data) => {
-        if (err){
-            return res.status(500).json({error : 'Error con conexión de datos'});
+        if (err) {
+            return res.status(500).json({ error : 'Error con conexión de datos' });
         }
         let users = JSON.parse(data);
-        users = users.map(user => 
-            user.id === userId ? {...user, ...updateUser } : user);
-        fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), (err) => {
-            if(err){
-                return res
-                    .status(500)
-                    .json({ error : 'Error al actualizar el usuario' });
+        users = users.filter(user => user.id !== userId);
+        fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), err => {
+            if (err) {
+                return res.status(500).json({ error : 'Error al eliminar usuario' });
             }
-            res.json(updateUser);
+            res.status(204).send();
         });
     });
 });
