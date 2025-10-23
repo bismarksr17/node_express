@@ -89,6 +89,7 @@ app.get('/users', (req, res) => {
     })
 });
 
+//implementación de método POST de usuarios
 app.post('/users', (req, res) => {
     const newUser = req.body;
     fs.readFile(usersFilePath, 'utf-8', (err, data) => {
@@ -102,6 +103,28 @@ app.post('/users', (req, res) => {
                 return res.status(500).json({error : 'Error al guardar el usuario'})
             }
             res.status(201).json(newUser);
+        });
+    });
+});
+
+//implementación de método PUT de usuarios
+app.put('/users/:id', (req, res) => {
+    const userId = parseInt(req.params.id, 10);
+    const updateUser = req.body;
+    fs.readFile(usersFilePath, 'utf-8', (err, data) => {
+        if (err){
+            return res.status(500).json({error : 'Error con conexión de datos'});
+        }
+        let users = JSON.parse(data);
+        users = users.map(user => 
+            user.id === userId ? {...user, ...updateUser } : user);
+        fs.writeFile(usersFilePath, JSON.stringify(users, null, 2), (err) => {
+            if(err){
+                return res
+                    .status(500)
+                    .json({ error : 'Error al actualizar el usuario' });
+            }
+            res.json(updateUser);
         });
     });
 });
