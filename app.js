@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 
 const LoggerMiddleware = require('./middlewares/logger')
+const errorHandler = require('./middlewares/errorHandler')
 const { validateUser } = require('./utils/validation')
 
 const bodyParser = require('body-parser');
@@ -10,6 +11,7 @@ const bodyParser = require('body-parser');
 //uso de fileSystem 
 const fs = require('fs');
 const path = require('path');
+const { nextTick } = require('process');
 const usersFilePath = path.join(__dirname, 'users.json');
 
 //instancia de express
@@ -19,6 +21,7 @@ const app = express();
 app.use(bodyParser.json()); //soporte para json
 app.use(bodyParser.urlencoded({ extended: true })); //soporte para formData (datos de formulario)
 app.use(LoggerMiddleware)
+app.use(errorHandler)
 
 //lectura de puerto desde variables de entorno
 const PORT = process.env.PORT || 3005;
@@ -166,6 +169,10 @@ app.delete('/users/:id', (req, res) => {
         });
     });
 });
+
+app.get('/error', (req, res, next) => {
+  next(new Error('Error intencional'))
+})
 
 //arranque de servidor
 app.listen(PORT, () => {
