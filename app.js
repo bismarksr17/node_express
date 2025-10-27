@@ -4,10 +4,13 @@ const express = require('express');
 
 const { PrismaClient} = require('@prisma/client')
 const prisma = new PrismaClient();
+const bcryptyptypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const LoggerMiddleware = require('./middlewares/logger')
 const errorHandler = require('./middlewares/errorHandler')
 const { validateUser } = require('./utils/validation')
+const authenticateToken = require('./middlewares/auth')
 
 const bodyParser = require('body-parser');
 
@@ -185,6 +188,25 @@ app.get('/db-users', async (req, res) => {
   catch (error){
     res.status(500).json({ error : 'Error al comunarse con la base de datos' })
   }
+});
+
+app.get('/protected-route', authenticateToken, (req, res) => {
+  res.send('Esta es una ruta protegida');
+});
+
+app.post('/register', async (req, res) => {
+  const { email, password, name } = req.body;
+  const hashedPassword = await bcryptyptypt.hash(password, 10);
+  
+  const newUser = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+      role: 'USER'
+    }
+  });
+  res.status(201).json({message:'User Registered Successfully'});
 });
 
 //arranque de servidor
