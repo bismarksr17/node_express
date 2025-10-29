@@ -7,10 +7,10 @@ const prisma = new PrismaClient();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const LoggerMiddleware = require('./middlewares/logger')
-const errorHandler = require('./middlewares/errorHandler')
-const { validateUser } = require('./utils/validation')
-const authenticateToken = require('./middlewares/auth')
+const LoggerMiddleware = require('./src/middlewares/logger')
+const errorHandler = require('./src/middlewares/errorHandler')
+const { validateUser } = require('./src/utils/validation')
+const authenticateToken = require('./src/middlewares/auth')
 
 const bodyParser = require('body-parser');
 
@@ -26,6 +26,7 @@ const app = express();
 //declaración de middleware para body-parser
 app.use(bodyParser.json()); //soporte para json
 app.use(bodyParser.urlencoded({ extended: true })); //soporte para formData (datos de formulario)
+
 app.use(LoggerMiddleware)
 app.use(errorHandler)
 
