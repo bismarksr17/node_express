@@ -5,7 +5,7 @@ const {
 
 const createTimeBlock = async (req, res) => {
     if(req.user.role !== 'ADMIN') {
-        return res.stattus(403).json({error : 'Accces denied'});
+        return res.status(403).json({error : 'Accces denied'});
     }
 
     const { startTime, endTime } = req.body();
@@ -19,7 +19,7 @@ const createTimeBlock = async (req, res) => {
 
 const listReservations = async (req, res) => {
     if(req.user.role !== 'ADMIN') {
-        return res.stattus(403).json({error : 'Accces denied'});
+        return res.status(403).json({error : 'Accces denied'});
     }
 
     try {
