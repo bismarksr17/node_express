@@ -8,7 +8,7 @@ const createTimeBlock = async (req, res) => {
         return res.status(403).json({error : 'Accces denied'});
     }
 
-    const { startTime, endTime } = req.body();
+    const { startTime, endTime } = req.body;
     try {
         const newTimeBlock = await createTimeBlocksService(startTime, endTime);
         res.status(201).json(newTimeBlock);

@@ -1,7 +1,8 @@
 const { PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const createTimeblockService = async (startTime, endTime) => {
+const createTimeBlocksService = async (startTime, endTime) => {
+    
     const newTimeBlock = await prisma.timeBlock.creare({
         data: {
             startTime : new Date(startTime),
@@ -14,11 +15,11 @@ const createTimeblockService = async (startTime, endTime) => {
 const listReservationsService = async () => {
     const reservations = await prisma.Appointment.findMany({
         include : {
-            User: true,
-            TimeBlock: true
+            user: true,
+            timeBlock: true
         }
     });
     return reservations;
 };
 
-module.exports = { createTimeblockService, listReservationsService };
+module.exports = { createTimeBlocksService, listReservationsService };
